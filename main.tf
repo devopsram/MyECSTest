@@ -117,6 +117,14 @@ resource "aws_autoscaling_group" "ecs_asg" {
   }
 }
 
+# Capacity Provider
+resource "aws_ecs_capacity_provider" "ecs_cp" {
+  name = "ecs-cp"
+  auto_scaling_group_provider {
+    auto_scaling_group_arn = aws_autoscaling_group.ecs_asg.arn
+  }
+}
+
 # Load Balancer
 resource "aws_lb" "ecs_lb" {
   name               = "ecs-lb"
@@ -145,9 +153,23 @@ resource "aws_lb_listener" "ecs_listener" {
   }
 }
 
+resource "aws_iam_role" "ecs_task_execution_role" {
+  name = "ecsTaskExecutionRole"
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17",
+    Statement = [{
+      Effect = "Allow",
+      Principal = { Service = "ecs-tasks.amazonaws.com" },
+      Action = "sts:AssumeRole"
+    }]
+  })
+}
+
 # Task Definition
 resource "aws_ecs_task_definition" "ecs_task" {
   family                   = "ecs-task"
+  execution_role_arn = aws_iam_role.ecs_task_execution_role.arn
+  task_role_arn = aws_iam_role.ecs_task_execution_role.arn
   network_mode             = "bridge"
   requires_compatibilities = ["EC2"]
   container_definitions    = <<TASK_DEFINITION
