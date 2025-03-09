@@ -119,7 +119,7 @@ resource "aws_autoscaling_group" "ecs_asg" {
 
 # Capacity Provider
 resource "aws_ecs_capacity_provider" "ecs_cp" {
-  name = "ecs-cp"
+  name = "cluster-cp"
   auto_scaling_group_provider {
     auto_scaling_group_arn = aws_autoscaling_group.ecs_asg.arn
   }
